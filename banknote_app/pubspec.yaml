@@ -1,0 +1,35 @@
+name: banknote_app
+description: "A new Flutter project."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.4 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # The following adds the Cupertino Icons font to your application.
+  cupertino_icons: ^1.0.6
+
+  # Adding the latest version of the http package for network requests
+  http: ^1.2.2
+
+  # Adding fluttertoast package for displaying messages
+  fluttertoast: ^8.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
