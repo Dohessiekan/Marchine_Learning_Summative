@@ -10,14 +10,12 @@ class PredictionInput(BaseModel):
     curtosis: float
     entropy: float
 
-
 # Create the FastAPI app
 app = FastAPI()
 
 @app.get('/')
 def index():
     return {'message': 'ALU stress'}
-
 
 # Load the pre-trained model
 model = joblib.load("Bank_Note_Authentication.pkl")
@@ -28,16 +26,18 @@ def predict(input_data: PredictionInput):
         # Convert input data to numpy array for prediction
         data = np.array([[input_data.variance, input_data.skewness, input_data.curtosis, input_data.entropy]])
         
-        # Make prediction
-        prediction = model.predict(data)
+        # Make prediction (get continuous output)
+        continuous_output = model.predict(data)
+        
+        # Apply threshold of 0.5 to get binary output
+        binary_prediction = (continuous_output > 0.5).astype(int)
         
         # Return the prediction
-        return {"prediction": prediction[0]}
+        return {"prediction": int(binary_prediction[0])}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-    
 
 if __name__ == '__main__':
+    import uvicorn
     uvicorn.run(app, host='127.0.0.1', port=8000)
