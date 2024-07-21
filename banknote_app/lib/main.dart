@@ -25,12 +25,35 @@ class PredictionPage extends StatefulWidget {
   _PredictionPageState createState() => _PredictionPageState();
 }
 
-class _PredictionPageState extends State<PredictionPage> {
+class _PredictionPageState extends State<PredictionPage>
+    with SingleTickerProviderStateMixin {
   final _varianceController = TextEditingController();
   final _skewnessController = TextEditingController();
   final _curtosisController = TextEditingController();
   final _entropyController = TextEditingController();
   String _prediction = '';
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 5),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   Future<void> _makePrediction() async {
     final variance = _varianceController.text;
@@ -62,10 +85,6 @@ class _PredictionPageState extends State<PredictionPage> {
         }),
       );
 
-      // Debugging statements
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final result = jsonDecode(response.body);
         setState(() {
@@ -91,45 +110,107 @@ class _PredictionPageState extends State<PredictionPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Prediction App'),
+        title: Text('TruePredict'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _varianceController,
-              decoration: InputDecoration(labelText: 'Variance'),
-              keyboardType: TextInputType.number,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) {
+              return Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/bank.webp'),
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(
+                      Colors.black.withOpacity(0.3),
+                      BlendMode.darken,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _varianceController,
+                  decoration: InputDecoration(
+                    labelText: 'Variance',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: _skewnessController,
+                  decoration: InputDecoration(
+                    labelText: 'Skewness',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: _curtosisController,
+                  decoration: InputDecoration(
+                    labelText: 'Curtosis',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                ),
+                TextField(
+                  controller: _entropyController,
+                  decoration: InputDecoration(
+                    labelText: 'Entropy',
+                    labelStyle: TextStyle(color: Colors.white),
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white),
+                    ),
+                  ),
+                  style: TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _makePrediction,
+                  child: Text('Predict'),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  _prediction,
+                  style: TextStyle(fontSize: 20, color: Colors.white),
+                ),
+              ],
             ),
-            TextField(
-              controller: _skewnessController,
-              decoration: InputDecoration(labelText: 'Skewness'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: _curtosisController,
-              decoration: InputDecoration(labelText: 'Curtosis'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: _entropyController,
-              decoration: InputDecoration(labelText: 'Entropy'),
-              keyboardType: TextInputType.number,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _makePrediction,
-              child: Text('Predict'),
-            ),
-            SizedBox(height: 20),
-            Text(
-              _prediction,
-              style: TextStyle(fontSize: 20),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
