@@ -5,17 +5,19 @@ import numpy as np
 
 # Define the input data model
 class PredictionInput(BaseModel):
-    variance: float
-    skewness: float
-    curtosis: float
-    entropy: float
+    age: float
+    bmi: float
+    children: int
+    sex: int
+    smoker: int
+    region: int
 
 # Create the FastAPI app
 app = FastAPI()
 
 @app.get('/')
 def index():
-    return {'message': 'ALU stress'}
+    return {'message': 'Welcome to the Insurance Prediction API'}
 
 # Load the pre-trained model
 model = joblib.load("Bank_Note_Authentication.pkl")
@@ -24,20 +26,25 @@ model = joblib.load("Bank_Note_Authentication.pkl")
 def predict(input_data: PredictionInput):
     try:
         # Convert input data to numpy array for prediction
-        data = np.array([[input_data.variance, input_data.skewness, input_data.curtosis, input_data.entropy]])
+        data = np.array([[input_data.age, input_data.bmi, input_data.children, input_data.sex, input_data.smoker, input_data.region]])
         
-        # Make prediction (get continuous output)
-        continuous_output = model.predict(data)
+        # Log the input data for debugging
+        print(f"Input data: {data}")
         
-        # Apply threshold of 0.5 to get binary output
-        binary_prediction = (continuous_output > 0.5).astype(int)
+        # Make prediction
+        prediction = model.predict(data)
+        
+        # Log the prediction for debugging
+        print(f"Prediction: {prediction}")
         
         # Return the prediction
-        return {"prediction": int(binary_prediction[0])}
+        return {"prediction": float(prediction[0])}
     
     except Exception as e:
+        # Log the error for debugging
+        print(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host='127.0.0.1', port=8000)
+    uvicorn.run(app, host='127.0.0.1', port=8000, reload=True)
