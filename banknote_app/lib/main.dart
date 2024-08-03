@@ -1,7 +1,63 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:fluttertoast/fluttertoast.dart';
+
+// Define the PredictionInput class
+class PredictionInput {
+  final double age;
+  final double bmi;
+  final int children;
+  final int sex;
+  final int smoker;
+  final int region;
+
+  PredictionInput({
+    required this.age,
+    required this.bmi,
+    required this.children,
+    required this.sex,
+    required this.smoker,
+    required this.region,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'age': age,
+      'bmi': bmi,
+      'children': children,
+      'sex': sex,
+      'smoker': smoker,
+      'region': region,
+    };
+  }
+}
+
+class PredictionService {
+  static const String apiUrl = 'http://127.0.0.1:8000/predict';
+
+  Future<double?> getPrediction(PredictionInput input) async {
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(input.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['prediction'];
+      } else {
+        print('Failed to get prediction: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error: $e');
+      return null;
+    }
+  }
+}
 
 void main() {
   runApp(MyApp());
@@ -11,206 +67,95 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Prediction App',
+      title: 'Insurance Prediction App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: PredictionPage(),
+      home: PredictionScreen(),
     );
   }
 }
 
-class PredictionPage extends StatefulWidget {
+class PredictionScreen extends StatefulWidget {
   @override
-  _PredictionPageState createState() => _PredictionPageState();
+  _PredictionScreenState createState() => _PredictionScreenState();
 }
 
-class _PredictionPageState extends State<PredictionPage>
-    with SingleTickerProviderStateMixin {
-  final _varianceController = TextEditingController();
-  final _skewnessController = TextEditingController();
-  final _curtosisController = TextEditingController();
-  final _entropyController = TextEditingController();
-  String _prediction = '';
-  late AnimationController _controller;
-  late Animation<double> _animation;
+class _PredictionScreenState extends State<PredictionScreen> {
+  final _ageController = TextEditingController();
+  final _bmiController = TextEditingController();
+  final _childrenController = TextEditingController();
+  final _sexController = TextEditingController();
+  final _smokerController = TextEditingController();
+  final _regionController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 5),
-      vsync: this,
-    )..repeat(reverse: true);
+  double? _prediction;
 
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
+  void _getPrediction() async {
+    final input = PredictionInput(
+      age: double.parse(_ageController.text),
+      bmi: double.parse(_bmiController.text),
+      children: int.parse(_childrenController.text),
+      sex: int.parse(_sexController.text),
+      smoker: int.parse(_smokerController.text),
+      region: int.parse(_regionController.text),
     );
-  }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _makePrediction() async {
-    final variance = _varianceController.text;
-    final skewness = _skewnessController.text;
-    final curtosis = _curtosisController.text;
-    final entropy = _entropyController.text;
-
-    if (variance.isEmpty ||
-        skewness.isEmpty ||
-        curtosis.isEmpty ||
-        entropy.isEmpty) {
-      Fluttertoast.showToast(
-        msg: "Please fill all fields",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-      );
-      return;
-    }
-
-    try {
-      final response = await http.post(
-        Uri.parse('https://marchine-learning-summative-1.onrender.com/predict'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'variance': double.parse(variance),
-          'skewness': double.parse(skewness),
-          'curtosis': double.parse(curtosis),
-          'entropy': double.parse(entropy),
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
-        setState(() {
-          _prediction = 'Prediction: ${result['prediction']}';
-        });
-      } else {
-        Fluttertoast.showToast(
-          msg: "Error: ${response.reasonPhrase}",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-        );
-      }
-    } catch (e) {
-      Fluttertoast.showToast(
-        msg: "An error occurred: $e",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-      );
-    }
+    final prediction = await PredictionService().getPrediction(input);
+    setState(() {
+      _prediction = prediction;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('TruePredict'),
+        title: Text('Insurance Prediction'),
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              return Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/bank.webp'),
-                    fit: BoxFit.cover,
-                    colorFilter: ColorFilter.mode(
-                      Colors.black.withOpacity(0.3),
-                      BlendMode.darken,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: _varianceController,
-                  decoration: InputDecoration(
-                    labelText: 'Variance',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white),
-                  keyboardType: TextInputType.number,
-                ),
-                TextField(
-                  controller: _skewnessController,
-                  decoration: InputDecoration(
-                    labelText: 'Skewness',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white),
-                  keyboardType: TextInputType.number,
-                ),
-                TextField(
-                  controller: _curtosisController,
-                  decoration: InputDecoration(
-                    labelText: 'Curtosis',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white),
-                  keyboardType: TextInputType.number,
-                ),
-                TextField(
-                  controller: _entropyController,
-                  decoration: InputDecoration(
-                    labelText: 'Entropy',
-                    labelStyle: TextStyle(color: Colors.white),
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.white),
-                    ),
-                  ),
-                  style: TextStyle(color: Colors.white),
-                  keyboardType: TextInputType.number,
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _makePrediction,
-                  child: Text('Predict'),
-                ),
-                SizedBox(height: 20),
-                Text(
-                  _prediction,
-                  style: TextStyle(fontSize: 20, color: Colors.white),
-                ),
-              ],
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _ageController,
+              decoration: InputDecoration(labelText: 'Age'),
+              keyboardType: TextInputType.number,
             ),
-          ),
-        ],
+            TextField(
+              controller: _bmiController,
+              decoration: InputDecoration(labelText: 'BMI'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _childrenController,
+              decoration: InputDecoration(labelText: 'Children'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _sexController,
+              decoration: InputDecoration(labelText: 'Sex'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _smokerController,
+              decoration: InputDecoration(labelText: 'Smoker'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _regionController,
+              decoration: InputDecoration(labelText: 'Region'),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _getPrediction,
+              child: Text('Get Prediction'),
+            ),
+            SizedBox(height: 20),
+            if (_prediction != null) Text('Predicted Value: $_prediction'),
+          ],
+        ),
       ),
     );
   }
