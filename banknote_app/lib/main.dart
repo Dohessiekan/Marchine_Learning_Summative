@@ -197,20 +197,20 @@ class _PredictionScreenState extends State<PredictionScreen>
             TextField(
               controller: _sexController,
               decoration:
-                  InputDecoration(labelText: 'Sex (0 for Female, 1 for Male)'),
+              InputDecoration(labelText: 'Sex (0 for Female, 1 for Male)'),
               keyboardType: TextInputType.number,
             ),
             TextField(
               controller: _smokerController,
               decoration:
-                  InputDecoration(labelText: 'Smoker (0 for No, 1 for Yes)'),
+              InputDecoration(labelText: 'Smoker (0 for No, 1 for Yes)'),
               keyboardType: TextInputType.number,
             ),
             TextField(
               controller: _regionController,
               decoration: InputDecoration(
                   labelText:
-                      'Region (1 for northwest, 2 for southeast, or 3 for southwest)'),
+                  'Region (1 for northwest, 2 for southeast, or 3 for southwest)'),
               keyboardType: TextInputType.number,
             ),
             SizedBox(height: 20),
