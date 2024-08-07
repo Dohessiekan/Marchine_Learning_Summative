@@ -1,16 +1,16 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import joblib
 import numpy as np
 
-# Define the input data model
+# Define the input data model with validation constraints
 class PredictionInput(BaseModel):
-    age: float
-    bmi: float
-    children: int
-    sex: int
-    smoker: int
-    region: int
+    age: float = Field(..., gt=0, lt=120, description="Age must be between 0 and 120")
+    bmi: float = Field(..., gt=0, lt=100, description="BMI must be between 0 and 100")
+    children: int = Field(..., ge=0, le=20, description="Number of children must be between 0 and 20")
+    sex: int = Field(..., ge=0, le=1, description="Sex must be 0 (female) or 1 (male)")
+    smoker: int = Field(..., ge=0, le=1, description="Smoker must be 0 (non-smoker) or 1 (smoker)")
+    region: int = Field(..., ge=0, le=3, description="Region must be between 0 and 3")
 
 # Create the FastAPI app
 app = FastAPI()
